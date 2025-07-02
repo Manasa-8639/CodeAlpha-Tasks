@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calculator {
+            background: linear-gradient(145deg, #2d3748, #1a202c);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .display {
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+        .btn {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .operator {
+            background: linear-gradient(145deg, #ed8936, #dd6b20);
+        }
+        .equals {
+            background: linear-gradient(145deg, #38a169, #2f855a);
+        }
+        .clear {
+            background: linear-gradient(145deg, #e53e3e, #c53030);
+        }
+        .func {
+            background: linear-gradient(145deg, #4a5568, #2d3748);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+    <div class="calculator w-full max-w-xs rounded-2xl p-5">
+        <div class="display mb-6 p-4 rounded-lg">
+            <div id="previous-operand" class="text-gray-400 text-right text-sm h-4 mb-1 overflow-hidden"></div>
+            <div id="current-operand" class="text-white text-right text-3xl font-medium overflow-hidden truncate"></div>
+        </div>
+        
+        <div class="grid grid-cols-4 gap-3">
+            <button class="clear btn p-3 text-white font-bold text-lg" data-action="clear">AC</button>
+            <button class="func btn p-3 text-white font-bold text-lg" data-action="backspace">⌫</button>
+            <button class="func btn p-3 text-white font-bold text-lg" data-percentage>%</button>
+            <button class="operator btn p-3 text-white font-bold text-lg" data-operation>÷</button>
+            
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>7</button>
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>8</button>
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>9</button>
+            <button class="operator btn p-3 text-white font-bold text-lg" data-operation>×</button>
+            
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>4</button>
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>5</button>
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>6</button>
+            <button class="operator btn p-3 text-white font-bold text-lg" data-operation>−</button>
+            
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>1</button>
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>2</button>
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>3</button>
+            <button class="operator btn p-3 text-white font-bold text-lg" data-operation>+</button>
+            
+            <button class="number btn bg-gray-700 p-3 text-white font-bold text-lg" data-number>0</button>
+            <button class="func btn bg-gray-700 p-3 text-white font-bold text-lg" data-decimal>.</button>
+            <button class="equals btn p-3 text-white font-bold text-lg col-span-2" data-equals>=</button>
+        </div>
+    </div>
+
+    <script>
+        class Calculator {
+            constructor(previousOperandTextElement, currentOperandTextElement) {
+                this.previousOperandTextElement = previousOperandTextElement
+                this.currentOperandTextElement = currentOperandTextElement
+                this.clear()
+            }
+
+            clear() {
+                this.currentOperand = ''
+                this.previousOperand = ''
+                this.operation = undefined
+                this.updateDisplay()
+            }
+
+            appendNumber(number) {
+                if (number === '.' && this.currentOperand.includes('.')) return
+                this.currentOperand = this.currentOperand.toString() + number.toString()
+            }
+
+            chooseOperation(operation) {
+                if (this.currentOperand === '') return
+                if (this.previousOperand !== '') {
+                    this.compute()
+                }
+                this.operation = operation
+                this.previousOperand = this.currentOperand
+                this.currentOperand = ''
+            }
+
+            compute() {
+                let computation
+                const prev = parseFloat(this.previousOperand)
+                const current = parseFloat(this.currentOperand)
+                if (isNaN(prev) || isNaN(current)) return
+
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current
+                        break
+                    case '−':
+                        computation = prev - current
+                        break
+                    case '×':
+                        computation = prev * current
+                        break
+                    case '÷':
+                        computation = prev / current
+                        break
+                    default:
+                        return
+                }
+                
+                this.currentOperand = computation
+                this.operation = undefined
+                this.previousOperand = ''
+            }
+
+            updateDisplay() {
+                this.currentOperandTextElement.innerText = this.currentOperand
+                if (this.operation != null) {
+                    this.previousOperandTextElement.innerText = 
+                        `${this.previousOperand} ${this.operation}`
+                } else {
+                    this.previousOperandTextElement.innerText = ''
+                }
+            }
+
+            delete() {
+                this.currentOperand = this.currentOperand.toString().slice(0, -1)
+            }
+
+            percentage() {
+                if (this.currentOperand === '') return
+                this.currentOperand = parseFloat(this.currentOperand) / 100
+            }
+        }
+
+        const numberButtons = document.querySelectorAll('[data-number]')
+        const operationButtons = document.querySelectorAll('[data-operation]')
+        const equalsButton = document.querySelector('[data-equals]')
+        const deleteButton = document.querySelector('[data-action="backspace"]')
+        const clearButton = document.querySelector('[data-action="clear"]')
+        const percentageButton = document.querySelector('[data-percentage]')
+        const previousOperandTextElement = document.querySelector('#previous-operand')
+        const currentOperandTextElement = document.querySelector('#current-operand')
+
+        const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement)
+
+        numberButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                calculator.appendNumber(button.innerText)
+                calculator.updateDisplay()
+            })
+        })
+
+        operationButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                calculator.chooseOperation(button.innerText)
+                calculator.updateDisplay()
+            })
+        })
+
+        equalsButton.addEventListener('click', button => {
+            calculator.compute()
+            calculator.updateDisplay()
+        })
+
+        clearButton.addEventListener('click', button => {
+            calculator.clear()
+        })
+
+        deleteButton.addEventListener('click', button => {
+            calculator.delete()
+            calculator.updateDisplay()
+        })
+
+        percentageButton.addEventListener('click', button => {
+            calculator.percentage()
+            calculator.updateDisplay()
+        })
+
+        // Keyboard support
+        document.addEventListener('keydown', function (event) {
+            let patternForNumbers = /[0-9]/g;
+            let patternForOperators = /[+\-*/]/g
+            
+            if (event.key.match(patternForNumbers)) {
+                event.preventDefault();
+                calculator.appendNumber(event.key)
+                calculator.updateDisplay()
+            }
+            if (event.key === '.') {
+                event.preventDefault();
+                calculator.appendNumber(event.key)
+                calculator.updateDisplay()
+            }
+            if (event.key.match(patternForOperators)) {
+                event.preventDefault();
+                let operation = event.key === '*' ? '×' : 
+                               event.key === '/' ? '÷' :
+                               event.key === '-' ? '−' : '+'
+                calculator.chooseOperation(operation)
+                calculator.updateDisplay()
+            }
+            if (event.key === 'Enter' || event.key === '=') {
+                event.preventDefault();
+                calculator.compute()
+                calculator.updateDisplay()
+            }
+            if (event.key === "Backspace") {
+                event.preventDefault();
+                calculator.delete()
+                calculator.updateDisplay()
+            }
+            if (event.key == 'Delete') {
+                event.preventDefault();
+                calculator.clear()
+            }
+            if (event.key === '%') {
+                event.preventDefault();
+                calculator.percentage()
+                calculator.updateDisplay()
+            }
+        })
+    </script>
+</body>
+</html>
+
